@@ -1,36 +1,61 @@
 <template>
-  <v-col v-if="relatedItems" class="related-items">
-    <h1 class="text-h5">
-      <span>{{ $t('moreLikeThis') }}</span>
-    </h1>
-    <vueper-slides
-      :bullets="false"
-      :bullets-outside="false"
-      :arrows-outside="false"
-      :visible-slides="8"
-      :slide-multiple="true"
-      :breakpoints="breakpoints"
-      fixed-height="true"
-    >
-      <vueper-slide v-for="item in relatedItems" :key="item.Id">
-        <template v-slot:content>
-          <card :item="item" />
+  <div v-if="relatedItems.length > 0">
+    <div v-if="!vertical" class="related-items">
+      <h1 class="text-h5 mb-2 ml-2 header">
+        <span>{{ $t('youMayAlsoLike') }}</span>
+      </h1>
+      <vueper-slides
+        :bullets="false"
+        :bullets-outside="false"
+        :arrows-outside="false"
+        :visible-slides="6"
+        :slide-multiple="true"
+        :breakpoints="breakpoints"
+        fixed-height="true"
+      >
+        <vueper-slide v-for="item in relatedItems" :key="item.Id">
+          <template v-slot:content>
+            <card :item="item" />
+          </template>
+        </vueper-slide>
+
+        <template v-slot:arrow-left>
+          <v-btn icon large>
+            <v-icon>mdi-arrow-left</v-icon>
+          </v-btn>
         </template>
-      </vueper-slide>
 
-      <template v-slot:arrow-left>
-        <v-btn icon large>
-          <v-icon>mdi-arrow-left</v-icon>
-        </v-btn>
-      </template>
-
-      <template v-slot:arrow-right>
-        <v-btn icon large>
-          <v-icon>mdi-arrow-right</v-icon>
-        </v-btn>
-      </template>
-    </vueper-slides>
-  </v-col>
+        <template v-slot:arrow-right>
+          <v-btn icon large>
+            <v-icon>mdi-arrow-right</v-icon>
+          </v-btn>
+        </template>
+      </vueper-slides>
+    </div>
+    <div v-if="vertical">
+      <h2>{{ $t('youMayAlsoLike') }}</h2>
+      <v-list color="transparent" two-line>
+        <v-list-item
+          v-for="relatedItem in relatedItems"
+          :key="relatedItem.Id"
+          nuxt
+          :to="`/item/${relatedItem.Id}`"
+        >
+          <v-list-item-avatar>
+            <v-img
+              :src="`${$axios.defaults.baseURL}/Items/${relatedItem.Id}/Images/Primary`"
+            />
+          </v-list-item-avatar>
+          <v-list-item-content>
+            <v-list-item-title>{{ relatedItem.Name }}</v-list-item-title>
+            <v-list-item-subtitle>{{
+              relatedItem.ProductionYear
+            }}</v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -47,6 +72,10 @@ export default Vue.extend({
     id: {
       type: String,
       required: true
+    },
+    vertical: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -67,7 +96,7 @@ export default Vue.extend({
           visibleSlides: 6
         },
         1904: {
-          visibleSlides: 8
+          visibleSlides: 6
         }
       }
     };
@@ -81,7 +110,7 @@ export default Vue.extend({
         await this.$api.library.getSimilarItems({
           itemId: this.id,
           userId: this.$auth.user.Id,
-          limit: 16
+          limit: this.vertical ? 5 : 12
         })
       ).data.Items as BaseItemDto[];
 
@@ -92,6 +121,22 @@ export default Vue.extend({
   }
 });
 </script>
+
+<style lang="scss" scoped>
+.header span {
+  padding-left: 0.25em;
+}
+.header::before {
+  background-color: white;
+  content: '';
+  position: relative;
+  display: inline-block;
+  height: 1px;
+  bottom: 0.3em;
+  left: 0;
+  width: 1.25em;
+}
+</style>
 
 <style>
 .related-items .vueperslides__track {
